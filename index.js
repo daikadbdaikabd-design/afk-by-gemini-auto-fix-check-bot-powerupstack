@@ -2,7 +2,7 @@ const mineflayer = require('mineflayer');
 const { pathfinder, Movements, goals } = require('mineflayer-pathfinder');
 
 const config = {
-    host: 'darkblademc.joinmc.world', // Thay IP server vào đây
+    host: "darkblademc.joinmc.world", // Thay IP server vào đây
     port:  20674,        // Thay Port server
     username: 'Pro_SuperBot',
     version: '1.20.1',  // Đổi cho đúng bản server của bạn
