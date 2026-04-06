@@ -1,9 +1,16 @@
 const mineflayer = require('mineflayer');
 const { pathfinder, Movements, goals } = require('mineflayer-pathfinder');
+const http = require('http');
+
+// 1. TẠO WEB SERVER GIẢ (FIX LỖI RENDER RESTART)
+http.createServer((req, res) => {
+    res.write('Bot is alive!');
+    res.end();
+}).listen(10000); 
 
 const config = {
     host: "darkblademc.joinmc.world", 
-    port: 20674,        // ĐÃ FIX CHUẨN: 20674 (Không bao giờ sai nữa!)
+    port: 20674,        
     username: 'Pro_SuperBot',
     version: '1.21.1',  
     password: 'matkhaucuaban' 
@@ -14,24 +21,24 @@ function startBot() {
         host: config.host,
         port: config.port,
         username: config.username,
-        version: config.version
+        version: config.version,
+        hideErrors: true // Ẩn bớt lỗi vặt để log sạch hơn
     });
 
     bot.loadPlugin(pathfinder);
 
-    console.log('--- Bot đang kết nối... ---');
+    console.log('--- Đang gửi yêu cầu kết nối... ---');
 
     bot.on('spawn', () => {
-        console.log('Bot đã vào server thành công!');
+        console.log('✅ Bot đã vào server thành công!');
         
-        // 1. Đăng ký & Đăng nhập
+        // Đăng nhập/Đăng ký
         setTimeout(() => {
             bot.chat(`/register ${config.password} ${config.password}`);
             bot.chat(`/login ${config.password}`);
-            console.log('Đã thực hiện Login/Register.');
         }, 2000);
 
-        // 2. Chuỗi hành động quậy phá (8 giây đổi 1 lần)
+        // Chuỗi hành động quậy phá (8 giây đổi 1 lần)
         const actionInterval = setInterval(async () => {
             if (!bot.entity) return;
             const r = Math.random();
@@ -42,47 +49,43 @@ function startBot() {
                         matching: (b) => ['grass_block', 'dirt', 'stone', 'sand', 'short_grass', 'tall_grass'].includes(b.name),
                         maxDistance: 4
                     });
-                    if (block) {
-                        console.log('Đang đập block...');
-                        await bot.dig(block);
-                    }
+                    if (block) await bot.dig(block);
                 } else if (r < 0.5) { // Đi dạo
-                    const x = bot.entity.position.x + (Math.random() - 0.5) * 10;
-                    const z = bot.entity.position.z + (Math.random() - 0.5) * 10;
+                    const x = bot.entity.position.x + (Math.random() - 0.5) * 6;
+                    const z = bot.entity.position.z + (Math.random() - 0.5) * 6;
                     bot.pathfinder.setMovements(new Movements(bot));
                     bot.pathfinder.setGoal(new goals.GoalNear(x, bot.entity.position.y, z, 1));
-                    console.log('Đang đi dạo...');
                 } else if (r < 0.7) { // Xoay + Nhảy
-                    bot.look(Math.random() * Math.PI * 2, (Math.random() - 0.5) * Math.PI);
+                    bot.look(Math.random() * Math.PI * 2, 0);
                     bot.setControlState('jump', true);
                     setTimeout(() => bot.setControlState('jump', false), 500);
-                } else { // Chat random
-                    const msgs = ["Hello ae", "Server on nhe", "Checking 24/7...", "Bot is working"];
-                    bot.chat(msgs[Math.floor(Math.random() * msgs.length)]);
+                } else { // Chat
+                    bot.chat("Checking server status... [AFK]");
                 }
-            } catch (e) { }
+            } catch (e) {}
         }, 8000);
 
-        // 3. Đúng 1 phút (60s) thì tự thoát để tiết kiệm quota
+        // Treo lâu hơn (10 phút) để tránh lỗi "Tên này đã online" do ra vào liên tục
         setTimeout(() => {
-            console.log('Hết 1 phút hoạt động. Đang thoát...');
+            console.log('Nghỉ giải lao 1 phút...');
             clearInterval(actionInterval);
             bot.quit();
-        }, 60000);
+        }, 600000); 
     });
 
-    // 4. Khi thoát ra, đợi 60 giây rồi vào lại từ đầu
-    bot.on('end', () => {
-        console.log('Bot đã thoát. Nghỉ 60 giây trước khi quay lại...');
-        setTimeout(() => {
-            startBot();
-        }, 60000);
+    bot.on('end', (reason) => {
+        console.log(`Bot thoát do: ${reason}. Chờ 60 giây để vào lại...`);
+        setTimeout(() => startBot(), 60000);
     });
 
     bot.on('error', (err) => {
-        console.log('Lỗi kết nối:', err.message);
+        if (err.code === 'ECONNREFUSED') {
+            console.log('❌ Server đang tắt, chờ kết nối lại...');
+        } else {
+            console.log('Lỗi:', err.message);
+        }
     });
 }
 
-// Chạy bot
+// Bắt đầu chạy
 startBot();
