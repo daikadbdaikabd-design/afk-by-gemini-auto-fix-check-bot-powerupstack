@@ -1,16 +1,17 @@
 {
   "name": "afk-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "Bot anti-idle for Minecraft Server",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "mineflayer": "^4.35.0"
+    "mineflayer": "^4.20.0",
+    "mineflayer-pathfinder": "^2.4.5"
   }
 }
